@@ -1,0 +1,40 @@
+version: "3.3"
+services:
+  dataingestion_aion_136_1:
+    build: ./DataIngestion
+    image: dataingestion_aion_136:1
+    command: python /app/load_data.py "{\"modelName\":\"AION_136\",\"modelVersion\":\"1\",\"dataLocation\":\"/root/HCLT/lanqos3_class.csv\"}"
+    volumes:
+      - C:\\AION\\HCLT:/root/HCLT
+  datatransformation_aion_136_1:
+    build: ./DataTransformation
+    image: datatransformation_aion_136:1
+    command: python /app/transformer.py "{\"modelName\":\"AION_136\",\"modelVersion\":\"1\",\"dataLocation\":\"/root/HCLT/lanqos3_class.csv\"}"
+    volumes:
+      - C:\\AION\\HCLT:/root/HCLT
+    depends_on:
+      - dataingestion_aion_136_1
+  featureengineering_aion_136_1:
+    build: ./FeatureEngineering
+    image: featureengineering_aion_136:1
+    command: python /app/selector.py "{\"modelName\":\"AION_136\",\"modelVersion\":\"1\",\"dataLocation\":\"/root/HCLT/lanqos3_class.csv\"}"
+    volumes:
+      - C:\\AION\\HCLT:/root/HCLT
+    depends_on:
+      - datatransformation_aion_136_1
+  modeltraining1_aion_136_1:
+    build: ./ModelTraining/XGBClassifier_modelBased
+    image: modeltraining1_aion_136:1
+    command: python /app/train.py "{\"modelName\":\"AION_136\",\"modelVersion\":\"1\",\"dataLocation\":\"/root/HCLT/lanqos3_class.csv\"}"
+    volumes:
+      - C:\\AION\\HCLT:/root/HCLT
+    depends_on:
+      - featureengineering_aion_136_1
+  prediction_aion_136_1:
+    build: ./Prediction
+    image: prediction_aion_136:1
+    command: python /app/Prediction.py "{\"modelName\":\"AION_136\",\"modelVersion\":\"1\",\"dataLocation\":\"/root/HCLT/lanqos3_class.csv\"}"
+    volumes:
+      - C:\\AION\\HCLT:/root/HCLT
+    depends_on:
+      - modeltraining1_aion_136_1
